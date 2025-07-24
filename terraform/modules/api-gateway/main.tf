@@ -1,27 +1,33 @@
-resource "aws_api_gateway_rest_api" "order_api" {
-  name        = "${var.environment}-order-api"
-  description = "Order processing API"
+# Data source for current AWS region
+data "aws_region" "current" {}
+
+# API Gateway REST API
+resource "aws_api_gateway_rest_api" "main" {
+  name = "${var.project_name}-${var.environment}-api"
   
-  endpoint_configuration {
-    types = ["REGIONAL"]
-  }
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-api"
+  })
 }
 
+# Orders resource
 resource "aws_api_gateway_resource" "orders" {
-  rest_api_id = aws_api_gateway_rest_api.order_api.id
-  parent_id   = aws_api_gateway_rest_api.order_api.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_rest_api.main.root_resource_id
   path_part   = "orders"
 }
 
+# POST method for orders
 resource "aws_api_gateway_method" "post_order" {
-  rest_api_id   = aws_api_gateway_rest_api.order_api.id
+  rest_api_id   = aws_api_gateway_rest_api.main.id
   resource_id   = aws_api_gateway_resource.orders.id
   http_method   = "POST"
   authorization = "NONE"
 }
 
+# Integration with Step Functions
 resource "aws_api_gateway_integration" "step_functions_integration" {
-  rest_api_id = aws_api_gateway_rest_api.order_api.id
+  rest_api_id = aws_api_gateway_rest_api.main.id
   resource_id = aws_api_gateway_resource.orders.id
   http_method = aws_api_gateway_method.post_order.http_method
   
@@ -33,13 +39,14 @@ resource "aws_api_gateway_integration" "step_functions_integration" {
   request_templates = {
     "application/json" = jsonencode({
       stateMachineArn = var.step_function_arn
-      input          = "$util.escapeJavaScript($input.json('))"
+      input          = "$util.escapeJavaScript($input.json('$'))"
     })
   }
 }
 
+# Method response
 resource "aws_api_gateway_method_response" "post_order_200" {
-  rest_api_id = aws_api_gateway_rest_api.order_api.id
+  rest_api_id = aws_api_gateway_rest_api.main.id
   resource_id = aws_api_gateway_resource.orders.id
   http_method = aws_api_gateway_method.post_order.http_method
   status_code = "200"
@@ -49,8 +56,9 @@ resource "aws_api_gateway_method_response" "post_order_200" {
   }
 }
 
+# Integration response
 resource "aws_api_gateway_integration_response" "post_order_200" {
-  rest_api_id = aws_api_gateway_rest_api.order_api.id
+  rest_api_id = aws_api_gateway_rest_api.main.id
   resource_id = aws_api_gateway_resource.orders.id
   http_method = aws_api_gateway_method.post_order.http_method
   status_code = aws_api_gateway_method_response.post_order_200.status_code
@@ -65,37 +73,13 @@ resource "aws_api_gateway_integration_response" "post_order_200" {
   depends_on = [aws_api_gateway_integration.step_functions_integration]
 }
 
-resource "aws_api_gateway_deployment" "order_api_deployment" {
+# API deployment
+resource "aws_api_gateway_deployment" "main" {
   depends_on = [
     aws_api_gateway_integration.step_functions_integration,
     aws_api_gateway_integration_response.post_order_200
   ]
   
-  rest_api_id = aws_api_gateway_rest_api.order_api.id
+  rest_api_id = aws_api_gateway_rest_api.main.id
   stage_name  = var.environment
-}
-
-data "aws_region" "current" {}
-
-variable "environment" {
-  description = "Environment name"
-  type        = string
-}
-
-variable "step_function_arn" {
-  description = "Step Functions state machine ARN"
-  type        = string
-}
-
-variable "lambda_invoke_role" {
-  description = "IAM role for API Gateway to invoke Step Functions"
-  type        = string
-}
-
-output "api_url" {
-  value = "${aws_api_gateway_deployment.order_api_deployment.invoke_url}/${var.environment}/orders"
-}
-
-output "api_id" {
-  value = aws_api_gateway_rest_api.order_api.id
 }

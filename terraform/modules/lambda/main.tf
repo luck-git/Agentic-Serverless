@@ -1,6 +1,6 @@
 # IAM Role for Lambda
 resource "aws_iam_role" "lambda_role" {
-  name = "${var.environment}-lambda-role"
+  name = "${var.project_name}-${var.environment}-lambda-role"
   
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -14,10 +14,15 @@ resource "aws_iam_role" "lambda_role" {
       }
     ]
   })
+  
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-lambda-role"
+  })
 }
 
+# IAM Policy for Lambda
 resource "aws_iam_role_policy" "lambda_policy" {
-  name = "${var.environment}-lambda-policy"
+  name = "${var.project_name}-${var.environment}-lambda-policy"
   role = aws_iam_role.lambda_role.id
   
   policy = jsonencode({
@@ -43,8 +48,8 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "dynamodb:Scan"
         ]
         Resource = [
-          "arn:aws:dynamodb:*:*:table/${var.orders_table}",
-          "arn:aws:dynamodb:*:*:table/${var.orders_table}/index/*"
+          var.orders_table_arn,
+          "${var.orders_table_arn}/index/*"
         ]
       },
       {
@@ -65,12 +70,13 @@ resource "aws_iam_role_policy" "lambda_policy" {
 
 # Order Validator Lambda
 resource "aws_lambda_function" "order_validator" {
-  filename         = "order_validator.zip"
-  function_name    = "${var.environment}-order-validator"
+  filename         = "${path.module}/order_validator.zip"
+  function_name    = "${var.project_name}-${var.environment}-order-validator"
   role            = aws_iam_role.lambda_role.arn
   handler         = "lambda_function.lambda_handler"
   runtime         = "python3.11"
-  timeout         = 30
+  timeout         = var.lambda_timeout
+  memory_size     = var.memory_size
   
   environment {
     variables = {
@@ -80,17 +86,22 @@ resource "aws_lambda_function" "order_validator" {
     }
   }
   
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-order-validator"
+  })
+  
   depends_on = [aws_iam_role_policy.lambda_policy]
 }
 
 # Order Fulfillment Lambda
 resource "aws_lambda_function" "order_fulfillment" {
-  filename         = "order_fulfillment.zip"
-  function_name    = "${var.environment}-order-fulfillment"
+  filename         = "${path.module}/order_fulfillment.zip"
+  function_name    = "${var.project_name}-${var.environment}-order-fulfillment"
   role            = aws_iam_role.lambda_role.arn
   handler         = "lambda_function.lambda_handler"
   runtime         = "python3.11"
-  timeout         = 300
+  timeout         = var.lambda_timeout
+  memory_size     = var.memory_size
   
   environment {
     variables = {
@@ -100,45 +111,9 @@ resource "aws_lambda_function" "order_fulfillment" {
     }
   }
   
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-order-fulfillment"
+  })
+  
   depends_on = [aws_iam_role_policy.lambda_policy]
-}
-
-# Variables
-variable "environment" {
-  description = "Environment name"
-  type        = string
-}
-
-variable "orders_table" {
-  description = "Orders DynamoDB table name"
-  type        = string
-}
-
-variable "order_queue_url" {
-  description = "Order queue URL"
-  type        = string
-}
-
-variable "order_queue_arn" {
-  description = "Order queue ARN"
-  type        = string
-}
-
-variable "dlq_url" {
-  description = "Dead letter queue URL"
-  type        = string
-}
-
-variable "dlq_arn" {
-  description = "Dead letter queue ARN"
-  type        = string
-}
-
-# Outputs
-output "validator_lambda_arn" {
-  value = aws_lambda_function.order_validator.arn
-}
-
-output "fulfillment_lambda_arn" {
-  value = aws_lambda_function.order_fulfillment.arn
 }

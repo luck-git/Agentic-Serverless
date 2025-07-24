@@ -1,5 +1,6 @@
+# IAM Role for Step Functions
 resource "aws_iam_role" "step_functions_role" {
-  name = "${var.environment}-step-functions-role"
+  name = "${var.project_name}-${var.environment}-step-functions-role"
   
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -13,10 +14,15 @@ resource "aws_iam_role" "step_functions_role" {
       }
     ]
   })
+  
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-step-functions-role"
+  })
 }
 
+# IAM Policy for Step Functions
 resource "aws_iam_role_policy" "step_functions_policy" {
-  name = "${var.environment}-step-functions-policy"
+  name = "${var.project_name}-${var.environment}-step-functions-policy"
   role = aws_iam_role.step_functions_role.id
   
   policy = jsonencode({
@@ -36,8 +42,9 @@ resource "aws_iam_role_policy" "step_functions_policy" {
   })
 }
 
-resource "aws_sfn_state_machine" "order_processing" {
-  name     = "${var.environment}-order-processing"
+# Step Functions State Machine
+resource "aws_sfn_state_machine" "order_workflow" {
+  name     = "${var.project_name}-${var.environment}-order-processing"
   role_arn = aws_iam_role.step_functions_role.arn
   
   definition = jsonencode({
@@ -136,10 +143,15 @@ resource "aws_sfn_state_machine" "order_processing" {
       }
     }
   })
+  
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-order-processing"
+  })
 }
 
+# IAM Role for API Gateway
 resource "aws_iam_role" "api_gateway_role" {
-  name = "${var.environment}-api-gateway-role"
+  name = "${var.project_name}-${var.environment}-api-gateway-role"
   
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -153,10 +165,15 @@ resource "aws_iam_role" "api_gateway_role" {
       }
     ]
   })
+  
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-api-gateway-role"
+  })
 }
 
+# IAM Policy for API Gateway
 resource "aws_iam_role_policy" "api_gateway_policy" {
-  name = "${var.environment}-api-gateway-policy"
+  name = "${var.project_name}-${var.environment}-api-gateway-policy"
   role = aws_iam_role.api_gateway_role.id
   
   policy = jsonencode({
@@ -167,31 +184,8 @@ resource "aws_iam_role_policy" "api_gateway_policy" {
         Action = [
           "states:StartExecution"
         ]
-        Resource = aws_sfn_state_machine.order_processing.arn
+        Resource = aws_sfn_state_machine.order_workflow.arn
       }
     ]
   })
-}
-
-variable "environment" {
-  description = "Environment name"
-  type        = string
-}
-
-variable "validator_lambda_arn" {
-  description = "Order validator Lambda ARN"
-  type        = string
-}
-
-variable "fulfillment_lambda_arn" {
-  description = "Order fulfillment Lambda ARN"
-  type        = string
-}
-
-output "state_machine_arn" {
-  value = aws_sfn_state_machine.order_processing.arn
-}
-
-output "api_gateway_role_arn" {
-  value = aws_iam_role.api_gateway_role.arn
 }
