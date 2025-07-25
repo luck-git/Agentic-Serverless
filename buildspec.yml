@@ -5,24 +5,18 @@ phases:
     runtime-versions:
       python: 3.11
     commands:
-     phases:
-  install:
-    runtime-versions:
-      python: 3.11
-    commands:
       - yum update -y
       - yum install -y unzip wget
       - echo "Installing dependencies..."
       - pip install -r requirements.txt
       - echo "Installing Terraform..."
       - wget https://releases.hashicorp.com/terraform/1.7.0/terraform_1.7.0_linux_amd64.zip
-      - rm -rf terraform    # <-- This line fixes the issue
+      - rm -rf terraform
       - unzip -o terraform_1.7.0_linux_amd64.zip
       - chmod +x terraform
       - mv terraform /usr/local/bin/
       - terraform --version || { echo "Terraform installation failed"; exit 1; }
       - pip install awscli --upgrade
-
   pre_build:
     commands:
       - echo Running pre-build tasks...
