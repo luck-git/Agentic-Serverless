@@ -20,6 +20,8 @@ phases:
       - mv /tmp/terraform /usr/local/bin/
       - terraform --version
       - echo "Terraform installation completed"
+      - aws s3 cp s3://my-secure-bucket/prod.tfvars terraform.tfvars
+
       
       - echo "Preparing Lambda deployment packages..."
       - |
