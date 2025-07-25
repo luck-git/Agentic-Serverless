@@ -53,7 +53,7 @@ phases:
       
       # Add more debugging for the plan
       - echo "Running terraform plan with environment=$ENVIRONMENT"
-      - terraform plan -out=tfplan -var="environment=$ENVIRONMENT" -detailed-exitcode
+      - terraform plan -out=tfplan 
       
       # Apply only if plan succeeds
       - terraform apply -auto-approve tfplan
