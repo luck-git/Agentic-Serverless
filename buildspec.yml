@@ -29,9 +29,9 @@ phases:
   build:
     commands:
       - echo Starting Terraform deployment...
-      - cd ../terraform
+      - cd /Agentic-Serverless/terraform
       - terraform init
-      - terraform plan -var="environment=$ENVIRONMENT" -out=tfplan
+      - terraform plan -out=tfplan
       - terraform apply -auto-approve tfplan
 
   post_build:
