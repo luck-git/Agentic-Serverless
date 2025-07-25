@@ -179,3 +179,26 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
     ]
   })
 }
+resource "aws_iam_role_policy" "codebuild_ssm_access" {
+  name = "codebuild-ssm-parameter-access"
+  role = "agentic-serverless-prod-codebuild-role"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+        ]
+        Resource = [
+          "arn:aws:ssm:ap-southeast-2:950916207122:parameter/github_token",
+          "arn:aws:ssm:ap-southeast-2:950916207122:parameter/github_user",
+          "arn:aws:ssm:ap-southeast-2:950916207122:parameter/github_branch"
+        ]
+      }
+    ]
+  })
+}
