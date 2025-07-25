@@ -5,9 +5,9 @@ phases:
     runtime-versions:
       python: 3.11
     commands:
-      yum update -y
+      - yum update -y
       - yum install -y unzip wget
-      - echo Installing dependencies...
+      - echo "Installing dependencies"
       - pip install -r requirements.txt
       - echo "Installing Terraform..."
       - wget https://releases.hashicorp.com/terraform/1.7.0/terraform_1.7.0_linux_amd64.zip
