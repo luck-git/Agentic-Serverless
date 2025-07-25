@@ -20,30 +20,23 @@ phases:
       - terraform --version || { echo "Terraform installation failed"; exit 1; }
       - pip install awscli --upgrade
 
-  pre_build:
-    commands:
-      - echo "Building Lambda deployment packages..."
-      - cd src/lambda/order-validator
-      - zip -r ../../../order_validator.zip .
-      - cd ../order-fulfillment  
-      - zip -r ../../../order_fulfillment.zip .
-      - cd ../../../
-      - echo "Fetching secrets from AWS SSM Parameter Store"
-      - export GITHUB_TOKEN=$(aws ssm get-parameter --name "/github_token" --with-decryption --query "Parameter.Value" --output text)
-      - export GITHUB_OWNER=$(aws ssm get-parameter --name "/github_owner" --query "Parameter.Value" --output text)
-      - export GITHUB_REPO=$(aws ssm get-parameter --name "/github_repo" --query "Parameter.Value" --output text)
-      - export GITHUB_BRANCH=$(aws ssm get-parameter --name "/github_branch" --query "Parameter.Value" --output text)
-
-      - echo "Generating terraform.tfvars"
-      - cd terraform/
-      - |
-      - cat > terraform.tfvars << EOF
-      - environment  = "${ENVIRONMENT}"
-      -  github_owner = "${GITHUB_OWNER}"
-      -  github_repo  = "${GITHUB_REPO}"
-      -  github_token = "${GITHUB_TOKEN}"
-      -  github_branch= "${GITHUB_BRANCH}"
-       EOF
+    pre_build:
+        commands:
+          - echo "Fetching secrets from AWS SSM Parameter Store"
+          - export GITHUB_TOKEN=$(aws ssm get-parameter --name "/github_token" --with-decryption --query "Parameter.Value" --output text)
+          - export GITHUB_OWNER=$(aws ssm get-parameter --name "/github_owner" --query "Parameter.Value" --output text)
+          - export GITHUB_REPO=$(aws ssm get-parameter --name "/github_repo" --query "Parameter.Value" --output text)
+          - export GITHUB_BRANCH=$(aws ssm get-parameter --name "/github_branch" --query "Parameter.Value" --output text)
+          - export ENVIRONMENT="prod"
+          - cd terraform/
+          - |
+            cat > terraform.tfvars << EOF
+            environment  = "${ENVIRONMENT}"
+            github_owner = "${GITHUB_OWNER}"
+            github_repo  = "${GITHUB_REPO}"
+            github_token = "${GITHUB_TOKEN}"
+            github_branch= "${GITHUB_BRANCH}"
+            EOF
 
   build:
     commands:
