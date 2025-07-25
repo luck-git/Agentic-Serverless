@@ -1,4 +1,7 @@
 version: 0.2
+env:
+  variables:
+    ENVIRONMENT: prod
 
 phases:
   install:
@@ -32,8 +35,8 @@ phases:
       - ls -la
       - cd terraform/
       - terraform init
-      - terraform plan -out=tfplan
-      - terraform apply -auto-approve tfplan
+      - terraform plan -out=tfplan -var="environment=$ENVIRONMENT"
+      - terraform apply -auto-approve -var="environment=$ENVIRONMENT" tfplan
 
   post_build:
     commands:
