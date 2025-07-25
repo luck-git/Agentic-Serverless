@@ -66,19 +66,21 @@ resource "aws_codebuild_project" "terraform_build" {
       value = data.aws_region.current.name
     }
 
+   environment_variable {
+      name  = "GITHUB_USER"
+      value = "github_user"
+      type  = "PARAMETER_STORE"
+    }
+
     environment_variable {
       name  = "GITHUB_TOKEN"
-      value = var.github_token
+      value = "github_token"
+      type  = "PARAMETER_STORE"
     }
-
     environment_variable {
-      name  = "GITHUB_OWNER"
-      value = var.github_owner
-    }
-
-    environment_variable {
-      name  = "GITHUB_BRANCH"
-      value = var.github_branch
+      name  = "GITHUB_branch"
+      value = "github_branch"
+      type  = "PARAMETER_STORE"
     }
   }
   source {

@@ -58,12 +58,6 @@ phases:
       # Apply only if plan succeeds
       - terraform apply -auto-approve tfplan
 
-  post_build:
-    commands:
-      - echo "Build completed successfully"
-      - cd terraform/
-      - terraform output || echo "No outputs to display"
-
 artifacts:
   files:
     - '**/*'
