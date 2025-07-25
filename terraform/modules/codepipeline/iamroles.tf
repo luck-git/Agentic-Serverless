@@ -144,5 +144,38 @@ resource "aws_iam_role" "codepipeline_role" {
     Name = "${var.project_name}-${var.environment}-codepipeline-role"
   })
 }
+# CodePipeline IAM Policy
+resource "aws_iam_role_policy" "codepipeline_policy" {
+  name = "${var.project_name}-${var.environment}-codepipeline-policy"
+  role = aws_iam_role.codepipeline_role.id
 
-# CodeP
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetBucketVersioning",
+          "s3:GetBucketLocation",
+          "s3:ListBucket",
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+          "s3:PutObject",
+          "s3:PutObjectAcl"
+        ]
+        Resource = [
+          aws_s3_bucket.codepipeline_artifacts.arn,
+          "${aws_s3_bucket.codepipeline_artifacts.arn}/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "codebuild:BatchGetBuilds",
+          "codebuild:StartBuild"
+        ]
+        Resource = aws_codebuild_project.terraform_build.arn
+      }
+    ]
+  })
+}
