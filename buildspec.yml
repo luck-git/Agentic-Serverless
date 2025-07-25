@@ -6,55 +6,64 @@ env:
 
 phases:
   install:
+    runtime-versions:
+      python: 3.11
     commands:
-      - echo "Installing system dependencies..."
       - yum update -y
       - yum install -y unzip wget
-      
-  pre_build:
-    commands:
+      - echo "Installing dependencies..."
+      - pip install -r requirements.txt
       - echo "Installing Terraform..."
       - wget https://releases.hashicorp.com/terraform/1.7.0/terraform_1.7.0_linux_amd64.zip
       - unzip -o terraform_1.7.0_linux_amd64.zip -d /tmp/
       - chmod +x /tmp/terraform
       - mv /tmp/terraform /usr/local/bin/
-      - terraform --version
-      - echo "Terraform installation completed"
-      - aws s3 cp s3://my-secure-bucket/prod.tfvars terraform.tfvars
+      - terraform --version || { echo "Terraform installation failed"; exit 1; }
+      - pip install awscli --upgrade
 
-      
-      - echo "Preparing Lambda deployment packages..."
-      - |
-        # Create Lambda packages if source directories exist
-        if [ -d "src/lambda/order-validator" ]; then
-          cd src/lambda/order-validator
-          zip -r ../../../modules/lambda/order_validator.zip .
-          cd ../../../
-        fi
-        
-        if [ -d "src/lambda/order-fulfillment" ]; then
-          cd src/lambda/order-fulfillment  
-          zip -r ../../../modules/lambda/order_fulfillment.zip .
-          cd ../../../
-        fi
+  pre_build:
+    commands:
+      - echo "Building Lambda deployment packages..."
+      - cd src/lambda/order-validator
+      - zip -r ../../../order_validator.zip .
+      - cd ../order-fulfillment  
+      - zip -r ../../../order_fulfillment.zip .
+      - cd ../../../
 
   build:
     commands:
-      - echo "Starting Terraform operations..."
+      - echo "Starting Terraform deployment..."
+      - pwd
+      - ls -la
       - cd terraform/
+      
+      # Debug: Check what variables Terraform expects
+      - echo "=== DEBUGGING TERRAFORM VARIABLES ==="
+      - echo "Environment variable ENVIRONMENT = $ENVIRONMENT"
+      - terraform --version
+      - echo "Checking Terraform configuration..."
+      - ls -la
+      - cat variables.tf || echo "No variables.tf found"
+      - echo "=== END DEBUG INFO ==="
+      
+      # Initialize
       - terraform init
-      - terraform plan -var-file=terraform.tfvars -out=tfplan
-      - terraform apply -var-file=terraform.tfvars -auto-approve
-        else
-          echo "Running default Terraform deployment..."
-          terraform plan -var-file=terraform.tfvars -out=tfplan
-          terraform apply -var-file=terraform.tfvars -auto-approve
+      
+      # Validate first to catch issues early
+      - terraform validate
+      
+      # Add more debugging for the plan
+      - echo "Running terraform plan with environment=$ENVIRONMENT"
+      - terraform plan -out=tfplan -var="environment=$ENVIRONMENT" -detailed-exitcode
+      
+      # Apply only if plan succeeds
       - terraform apply -auto-approve tfplan
 
   post_build:
     commands:
-      - echo "Terraform operation completed successfully"
-      - terraform output || echo "No outputs available"
+      - echo "Build completed successfully"
+      - cd terraform/
+      - terraform output || echo "No outputs to display"
 
 artifacts:
   files:
@@ -63,4 +72,5 @@ artifacts:
 
 cache:
   paths:
+    - '/root/.cache/pip/**/*'
     - '.terraform/**/*'
