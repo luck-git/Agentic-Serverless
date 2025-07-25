@@ -6,10 +6,9 @@ env:
 
 phases:
   install:
-    runtime-versions:
-      python: 3.11
     commands:
       - yum update -y
+      - yum install -y unzip wget python3 python3-pip
       - yum install -y unzip wget
       - echo "Installing dependencies..."
       - pip install -r requirements.txt
