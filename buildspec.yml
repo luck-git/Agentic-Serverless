@@ -24,13 +24,14 @@ phases:
       - zip -r ../../../order_validator.zip .
       - cd ../order-fulfillment  
       - zip -r ../../../order_fulfillment.zip .
-      - cd terraform/
+      - cd ../
 
   build:
     commands:
       - echo Starting Terraform deployment...
       - pwd
       - ls -la
+      - cd terraform/
       - terraform init
       - terraform plan -out=tfplan
       - terraform apply -auto-approve tfplan
