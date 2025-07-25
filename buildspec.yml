@@ -36,13 +36,13 @@ phases:
 
       - echo "Generating terraform.tfvars"
       - |
-      -  cat > terraform.tfvars << EOF
-      -  github_token  = "${GITHUB_TOKEN}"
-      -  github_owner  = "${GITHUB_OWNER}"
-      -  github_repo   = "${GITHUB_REPO}"
-      -  github_branch = "${GITHUB_BRANCH}"
-      -  EOF
-
+        cat > terraform.tfvars << EOF
+        github_token  = "${GITHUB_TOKEN}"
+        github_owner  = "${GITHUB_OWNER}"
+        github_repo   = "${GITHUB_REPO}"
+        github_branch = "${GITHUB_BRANCH}"
+        environment   = "${ENVIRONMENT}"
+        EOF
 
   build:
     commands:
@@ -51,7 +51,6 @@ phases:
       - ls -la
       - cd terraform/
       
-      # Debug: Check what variables Terraform expects
       - echo "=== DEBUGGING TERRAFORM VARIABLES ==="
       - echo "Environment variable ENVIRONMENT = $ENVIRONMENT"
       - terraform --version
@@ -60,17 +59,10 @@ phases:
       - cat variables.tf || echo "No variables.tf found"
       - echo "=== END DEBUG INFO ==="
       
-      # Initialize
       - terraform init
-      
-      # Validate first to catch issues early
       - terraform validate
-      
-      # Add more debugging for the plan
       - echo "Running terraform plan with environment=$ENVIRONMENT"
-      - terraform plan -input=false -out=tfplan
-      
-      # Apply only if plan succeeds
+      - terraform plan -input=false -var-file=terraform.tfvars -out=tfplan
       - terraform apply -input=false -auto-approve tfplan
 
 artifacts:
