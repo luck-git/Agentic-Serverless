@@ -1,38 +1,44 @@
 version: 0.2
+
 env:
   variables:
     ENVIRONMENT: prod
 
 phases:
   install:
-    runtime-versions:
-      python: 3.11
     commands:
+      - echo "Installing system dependencies..."
       - yum update -y
       - yum install -y unzip wget
-      - echo "Installing dependencies..."
-      - pip install -r requirements.txt
-      - echo "Installing Terraform..."
-      - wget https://releases.hashicorp.com/terraform/1.7.0/terraform_1.7.0_linux_amd64.zip
-      - unzip -o terraform_1.7.0_linux_amd64.zip -d /tmp/
-      - chmod +x /tmp/terraform
-      - mv /tmp/terraform /usr/local/bin/
-      - terraform --version || { echo "Terraform installation failed"; exit 1; }
-      - pip install awscli --upgrade
+      
   pre_build:
     commands:
-      - echo Building Lambda deployment packages...
-      - cd src/lambda/order-validator
-      - zip -r ../../../order_validator.zip .
-      - cd ../order-fulfillment  
-      - zip -r ../../../order_fulfillment.zip .
-      - cd ../../../
+      - echo "Installing Terraform..."
+      - wget https://releases.hashicorp.com/terraform/1.7.0/terraform_1.7.0_linux_amd64.zip
+      - unzip -o terraform_1.7.0_linux_amd64.zip
+      - chmod +x terraform
+      - mv terraform /usr/local/bin/
+      - terraform --version
+      - echo "Terraform installation completed"
+      
+      - echo "Preparing Lambda deployment packages..."
+      - |
+        # Create Lambda packages if source directories exist
+        if [ -d "src/lambda/order-validator" ]; then
+          cd src/lambda/order-validator
+          zip -r ../../../modules/lambda/order_validator.zip .
+          cd ../../../
+        fi
+        
+        if [ -d "src/lambda/order-fulfillment" ]; then
+          cd src/lambda/order-fulfillment  
+          zip -r ../../../modules/lambda/order_fulfillment.zip .
+          cd ../../../
+        fi
 
   build:
     commands:
-      - echo Starting Terraform deployment...
-      - pwd
-      - ls -la
+      - echo "Starting Terraform operations..."
       - cd terraform/
       - terraform init
       - terraform plan -out=tfplan -var="environment=$ENVIRONMENT"
@@ -40,14 +46,14 @@ phases:
 
   post_build:
     commands:
-      - echo Build completed successfully
-      - terraform output
+      - echo "Terraform operation completed successfully"
+      - terraform output || echo "No outputs available"
 
 artifacts:
   files:
     - '**/*'
+  name: terraform-artifacts
 
 cache:
   paths:
-    - '/root/.cache/pip/**/*'
     - '.terraform/**/*'
