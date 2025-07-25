@@ -65,8 +65,22 @@ resource "aws_codebuild_project" "terraform_build" {
       name  = "AWS_DEFAULT_REGION"
       value = data.aws_region.current.name
     }
-  }
 
+    environment_variable {
+      name  = "GITHUB_TOKEN"
+      value = var.github_token
+    }
+
+    environment_variable {
+      name  = "GITHUB_OWNER"
+      value = var.github_owner
+    }
+
+    environment_variable {
+      name  = "GITHUB_BRANCH"
+      value = var.github_branch
+    }
+  }
   source {
     type = "CODEPIPELINE"
     buildspec = "buildspec.yml"
