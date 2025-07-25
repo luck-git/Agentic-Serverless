@@ -83,6 +83,7 @@ resource "aws_codebuild_project" "terraform_build" {
       type  = "PARAMETER_STORE"
     }
   }
+
   source {
     type = "CODEPIPELINE"
     buildspec = "buildspec.yml"

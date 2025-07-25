@@ -84,9 +84,10 @@ module "codepipeline" {
   source        = "./modules/codepipeline"
   project_name  = var.project_name
   environment   = var.environment
- github_owner = data.aws_ssm_parameter.github_owner.value
-  github_repo  = data.aws_ssm_parameter.github_repo.value
-  github_token = data.aws_ssm_parameter.github_token.value
+  github_owner  = data.aws_ssm_parameter.github_owner.value
+  github_repo   = data.aws_ssm_parameter.github_repo.value
+  github_token  = data.aws_ssm_parameter.github_token.value
+  github_branch = data.aws_ssm_parameter.github_branch.value
   tags          = local.common_tags
 }
 # Outputs
