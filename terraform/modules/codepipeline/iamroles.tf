@@ -113,3 +113,25 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
     ]
   })
 }
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "apigateway:*",
+        "dynamodb:*",
+        "iam:CreateRole",
+        "iam:PutRolePolicy",
+        "iam:AttachRolePolicy",
+        "iam:PassRole",
+        "lambda:*",
+        "sqs:*",
+        "states:*",
+        "cloudwatch:*",
+        "logs:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
