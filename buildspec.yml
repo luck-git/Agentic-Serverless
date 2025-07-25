@@ -62,7 +62,7 @@ phases:
       - terraform init
       - terraform validate
       - echo "Running terraform plan with environment=$ENVIRONMENT"
-      - terraform plan -input=false -var-file=../teform.tfvars -out=tfplan
+      - terraform plan -input=false -var-file=../terraform.tfvars -out=tfplan
       - terraform apply -input=false -auto-approve tfplan
 
 artifacts:
