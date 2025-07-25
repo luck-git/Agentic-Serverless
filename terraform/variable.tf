@@ -60,3 +60,25 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+# variables.tf
+variable "github_owner" {
+  description = "GitHub repository owner/organization"
+  type        = string
+}
+
+variable "github_repo" {
+  description = "GitHub repository name"
+  type        = string
+}
+
+variable "github_branch" {
+  description = "GitHub branch name"
+  type        = string
+  default     = "main" # Optional default value
+}
+
+variable "github_token" {
+  description = "GitHub personal access token"
+  type        = string
+  sensitive   = true
+}

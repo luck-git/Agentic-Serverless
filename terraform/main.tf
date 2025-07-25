@@ -80,7 +80,16 @@ module "sqs" {
   max_receive_count  = var.sqs_max_receive_count
   tags               = local.common_tags
 }
-
+module "codepipeline" {
+  source        = "./modules/codepipeline"
+  project_name  = var.project_name
+  environment   = var.environment
+  github_owner  = var.github_owner
+  github_repo   = var.github_repo
+  github_branch = var.github_branch
+  github_token  = var.github_token
+  tags          = local.common_tags
+}
 # Outputs
 output "api_gateway_url" {
   description = "API Gateway endpoint URL"

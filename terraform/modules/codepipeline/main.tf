@@ -1,83 +1,44 @@
+# S3 Bucket for CodePipeline Artifacts
+resource "aws_s3_bucket" "codepipeline_artifacts" {
+  bucket = "${var.project_name}-${var.environment}-pipeline-artifacts-${random_string.bucket_suffix.result}"
+}
 
-resource "aws_s3_bucket" "codepipeline_bucket" {
-  bucket = "${var.environment}-order-processing-pipeline-artifacts"
+resource "random_string" "bucket_suffix" {
+  length  = 8
+  special = false
+  upper   = false
 }
 
 resource "aws_s3_bucket_versioning" "codepipeline_bucket_versioning" {
-  bucket = aws_s3_bucket.codepipeline_bucket.id
+  bucket = aws_s3_bucket.codepipeline_artifacts.id
   versioning_configuration {
     status = "Enabled"
   }
 }
 
-resource "aws_iam_role" "codepipeline_role" {
-  name = "${var.environment}-codepipeline-role"
+resource "aws_s3_bucket_server_side_encryption_configuration" "codepipeline_bucket_encryption" {
+  bucket = aws_s3_bucket.codepipeline_artifacts.id
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "codepipeline.amazonaws.com"
-        }
-      }
-    ]
-  })
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
 }
 
-resource "aws_iam_role" "codebuild_role" {
-  name = "${var.environment}-codebuild-role"
+resource "aws_s3_bucket_public_access_block" "codepipeline_bucket_pab" {
+  bucket = aws_s3_bucket.codepipeline_artifacts.id
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "codebuild.amazonaws.com"
-        }
-      }
-    ]
-  })
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
-resource "aws_iam_role_policy" "codepipeline_policy" {
-  name = "${var.environment}-codepipeline-policy"
-  role = aws_iam_role.codepipeline_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetBucketVersioning",
-          "s3:GetObject",
-          "s3:GetObjectVersion",
-          "s3:PutObject"
-        ]
-        Resource = [
-          aws_s3_bucket.codepipeline_bucket.arn,
-          "${aws_s3_bucket.codepipeline_bucket.arn}/*"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "codebuild:BatchGetBuilds",
-          "codebuild:StartBuild"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-resource "aws_codebuild_project" "order_processing_build" {
-  name          = "${var.environment}-order-processing-build"
+# CodeBuild Project
+resource "aws_codebuild_project" "terraform_build" {
+  name          = "${var.project_name}-${var.environment}-terraform-build"
+  description   = "Terraform build project for ${var.project_name}"
   service_role  = aws_iam_role.codebuild_role.arn
 
   artifacts {
@@ -85,13 +46,24 @@ resource "aws_codebuild_project" "order_processing_build" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                      = "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
+    type                       = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
 
     environment_variable {
       name  = "ENVIRONMENT"
       value = var.environment
+    }
+
+    environment_variable {
+      name  = "PROJECT_NAME"
+      value = var.project_name
+    }
+
+    environment_variable {
+      name  = "AWS_DEFAULT_REGION"
+      value = data.aws_region.current.name
     }
   }
 
@@ -99,14 +71,17 @@ resource "aws_codebuild_project" "order_processing_build" {
     type = "CODEPIPELINE"
     buildspec = "buildspec.yml"
   }
+
+  tags = var.tags
 }
 
-resource "aws_codepipeline" "order_processing_pipeline" {
-  name     = "${var.environment}-order-processing-pipeline"
+# CodePipeline
+resource "aws_codepipeline" "terraform_pipeline" {
+  name     = "${var.project_name}-${var.environment}-terraform-pipeline"
   role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
-    location = aws_s3_bucket.codepipeline_bucket.bucket
+    location = aws_s3_bucket.codepipeline_artifacts.bucket
     type     = "S3"
   }
 
@@ -131,47 +106,55 @@ resource "aws_codepipeline" "order_processing_pipeline" {
   }
 
   stage {
-    name = "Build"
+    name = "Plan"
 
     action {
-      name             = "Build"
+      name             = "TerraformPlan"
       category         = "Build"
       owner            = "AWS"
       provider         = "CodeBuild"
       input_artifacts  = ["source_output"]
-      output_artifacts = ["build_output"]
+      output_artifacts = ["plan_output"]
       version          = "1"
 
       configuration = {
-        ProjectName = aws_codebuild_project.order_processing_build.name
+        ProjectName = aws_codebuild_project.terraform_build.name
+        EnvironmentVariables = jsonencode([
+          {
+            name  = "TF_COMMAND"
+            value = "plan"
+          }
+        ])
       }
     }
   }
+
+  stage {
+    name = "Deploy"
+
+    action {
+      name            = "TerraformApply"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
+
+      configuration = {
+        ProjectName = aws_codebuild_project.terraform_build.name
+        EnvironmentVariables = jsonencode([
+          {
+            name  = "TF_COMMAND"
+            value = "apply"
+          }
+        ])
+      }
+    }
+  }
+
+  tags = var.tags
 }
 
-variable "environment" {
-  description = "Environment name"
-  type        = string
-}
-
-variable "github_owner" {
-  description = "GitHub repository owner"
-  type        = string
-}
-
-variable "github_repo" {
-  description = "GitHub repository name"
-  type        = string
-}
-
-variable "github_branch" {
-  description = "GitHub branch"
-  type        = string
-  default     = "main"
-}
-
-variable "github_token" {
-  description = "GitHub OAuth token"
-  type        = string
-  sensitive   = true
-}
+# Data sources
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}

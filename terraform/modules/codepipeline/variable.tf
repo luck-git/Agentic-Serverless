@@ -1,37 +1,37 @@
 variable "project_name" {
-  description = "Name of the project"
   type        = string
+  description = "Name of the project"
 }
 
 variable "environment" {
-  description = "Environment name"
   type        = string
+  description = "Environment (dev/stage/prod)"
 }
 
 variable "github_owner" {
-  description = "GitHub repository owner"
   type        = string
+  description = "GitHub repository owner"
 }
 
 variable "github_repo" {
-  description = "GitHub repository name"
   type        = string
+  description = "GitHub repository name"
 }
 
 variable "github_branch" {
-  description = "GitHub branch to trigger pipeline"
   type        = string
   default     = "main"
+  description = "GitHub branch to use"
 }
 
 variable "github_token" {
-  description = "GitHub personal access token"
   type        = string
   sensitive   = true
+  description = "GitHub OAuth token"
 }
 
 variable "tags" {
-  description = "Tags to apply to resources"
   type        = map(string)
   default     = {}
+  description = "Common tags for all resources"
 }
