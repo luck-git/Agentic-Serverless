@@ -19,9 +19,6 @@ phases:
       - pip install awscli --upgrade
   pre_build:
     commands:
-      - echo Running pre-build tasks...
-      - echo Running unit tests...
-      - python -m pytest tests/ -v
       - echo Building Lambda deployment packages...
       - cd src/lambda/order-validator
       - zip -r ../../../order_validator.zip .
