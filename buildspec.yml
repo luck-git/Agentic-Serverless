@@ -36,13 +36,14 @@ phases:
 
       - echo "Generating terraform.tfvars"
       - cd terraform/
-        cat > terraform.tfvars << EOF
-        github_token  = "${GITHUB_TOKEN}"
-        github_owner  = "${GITHUB_OWNER}"
-        github_repo   = "${GITHUB_REPO}"
-        github_branch = "${GITHUB_BRANCH}"
-        environment   = "${ENVIRONMENT}"
-        EOF
+      - |
+      - cat > terraform.tfvars << EOF
+      - environment  = "${ENVIRONMENT}"
+      -  github_owner = "${GITHUB_OWNER}"
+      -  github_repo  = "${GITHUB_REPO}"
+      -  github_token = "${GITHUB_TOKEN}"
+      -  github_branch= "${GITHUB_BRANCH}"
+       EOF
 
   build:
     commands:
