@@ -11,7 +11,6 @@ phases:
       - pip install -r requirements.txt
       - echo "Installing Terraform..."
       - wget https://releases.hashicorp.com/terraform/1.7.0/terraform_1.7.0_linux_amd64.zip
-      - rm -rf terraform
       - unzip -o terraform_1.7.0_linux_amd64.zip
       - chmod +x terraform
       - mv terraform /usr/local/bin/
@@ -31,7 +30,6 @@ phases:
       - echo Starting Terraform deployment...
       - pwd
       - ls -la
-      - cd terraform/
       - terraform init
       - terraform plan -out=tfplan
       - terraform apply -auto-approve tfplan
