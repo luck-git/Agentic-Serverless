@@ -50,6 +50,7 @@ phases:
       - ls -la
       - echo "Checking Terraform configuration..."
       - cat variable.tf || echo "variable.tf not found"
+      - cd terraform
       - terraform init
       - terraform validate
       - echo "Running terraform plan"
