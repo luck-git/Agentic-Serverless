@@ -49,6 +49,7 @@ phases:
       - echo "Starting Terraform deployment..."
       - pwd
       - ls -la
+      - cat terraform.tfvars
       - cd terraform/
       
       - echo "=== DEBUGGING TERRAFORM VARIABLES ==="
