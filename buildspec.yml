@@ -29,7 +29,8 @@ phases:
   build:
     commands:
       - echo Starting Terraform deployment...
-      - cd $CODEBUILD_SRC_DIR/terraform
+      - ls -la
+      -  cd ../terraform
       - terraform init
       - terraform plan -out=tfplan
       - terraform apply -auto-approve tfplan
