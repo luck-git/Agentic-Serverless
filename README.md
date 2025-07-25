@@ -15,13 +15,13 @@ This project implements a fully automated order processing system on AWS, levera
 
 ## Architecture Diagram
 
-![Architecture Diagram](https://drive.google.com/file/d/1XLN3pjKdbMDSwKxB6Il8p1IzFWyR25Ev/view?usp=sharing)
+![Architecture Diagram] https://drive.google.com/file/d/1XLN3pjKdbMDSwKxB6Il8p1IzFWyR25Ev/view?usp=sharing
 
 *The architecture diagram shows the complete flow from API Gateway through Step Function orchestration, DynamoDB interactions, SQS queues, Fulfillment Lambda, and the DLQ mechanism.*
 
 ## Step Functions Workflow
 
-![Step Functions Graph](https://drive.google.com/file/d/1fGZ8DkGVxGwUhvuFpl-GKHtsAKWtZEfV/view?usp=sharing)
+![Step Functions Graph] https://drive.google.com/file/d/1fGZ8DkGVxGwUhvuFpl-GKHtsAKWtZEfV/view?usp=sharing
 
 *The Step Functions workflow graph illustrates the order processing flow including validation, storage, and queue integration steps.*
 
