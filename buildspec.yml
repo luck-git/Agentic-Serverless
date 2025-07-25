@@ -36,7 +36,7 @@ phases:
       - cd terraform/
       - terraform init
       - terraform plan -out=tfplan -var="environment=$ENVIRONMENT"
-      - terraform apply -auto-approve -var="environment=$ENVIRONMENT" tfplan
+      - terraform apply -auto-approve tfplan
 
   post_build:
     commands:
