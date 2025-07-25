@@ -28,6 +28,7 @@ phases:
       - cd ../order-fulfillment  
       - zip -r ../../../order_fulfillment.zip .
       - cd ../../../
+      - cd terraform/
       - echo "Fetching secrets from AWS SSM Parameter Store"
       - export GITHUB_TOKEN=$(aws ssm get-parameter --name "/github_token" --with-decryption --query "Parameter.Value" --output text)
       - export GITHUB_OWNER=$(aws ssm get-parameter --name "/github_owner" --query "Parameter.Value" --output text)
@@ -35,7 +36,7 @@ phases:
       - export GITHUB_BRANCH=$(aws ssm get-parameter --name "/github_branch" --query "Parameter.Value" --output text)
 
       - echo "Generating terraform.tfvars"
-      - cd terraform/
+      - 
         cat > terraform.tfvars << EOF
         github_token  = "${GITHUB_TOKEN}"
         github_owner  = "${GITHUB_OWNER}"
