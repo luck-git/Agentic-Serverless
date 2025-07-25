@@ -5,10 +5,11 @@ phases:
     runtime-versions:
       python: 3.11
     commands:
+      - yum update -y
+      - yum install -y unzip
       - echo Installing dependencies...
       - pip install -r requirements.txt
       - curl -fsSL https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip -o terraform.zip
-      - sudo apt install unzip
       - unzip terraform.zip
       - mv terraform /usr/local/bin/
       - terraform --version
