@@ -20,11 +20,8 @@ phases:
   pre_build:
     commands:
       - echo Building Lambda deployment packages...
-      - cd src/lambda/order-validator
-      - zip -r ../../../order_validator.zip .
-      - cd ../order-fulfillment  
-      - zip -r ../../../order_fulfillment.zip .
-      - cd ../../..
+      - zip -r order_fulfillment.zip src/lambda/order-fulfillment/order-fulfillment/*
+      - zip -r order_validator.zip src/lambda/order-validator/order-validator/*
 
   build:
     commands:
