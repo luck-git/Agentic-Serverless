@@ -174,15 +174,5 @@ curl -X POST https://lt2bq3ch28.execute-api.ap-southeast-2.amazonaws.com/prod/or
 ## Resources
 
 - **GitHub Repository**: [https://github.com/luck-git/Agentic-Serverless](https://github.com/luck-git/Agentic-Serverless)
-- **Demo Video**: [Demo Video on Loom](https://www.loom.com/share/your-video-id)
+- **Demo Video**: [https://www.loom.com/share/a738f0f0738944849bbff55c4b213817?sid=93b82698-81c3-48dd-90ec-ce8dff8f3fc9)
 
-## Next Steps
-
-To complete the documentation setup:
-
-1. **Add your architecture diagram**: Save your architecture diagram as `docs/architecture-diagram.png`
-2. **Add Step Functions graph**: Download your Step Functions graph and save as `docs/step-functions-graph.png`  
-3. **Update the demo video link**: Replace the placeholder Loom link with your actual video URL
-4. **Verify all endpoints**: Update the API Gateway endpoint URL if it has changed
-
-The README now properly references both diagrams and provides a cleaner, more professional structure for your project documentation.
