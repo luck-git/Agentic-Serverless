@@ -325,3 +325,21 @@ resource "aws_iam_role_policy" "codebuild_minimal_s3_policy" {
     ]
   })
 }
+resource "aws_iam_role_policy" "codebuild_s3_accelerate_fix" {
+  name = "${var.project_name}-${var.environment}-codebuild-s3-accelerate-fix"
+  role = aws_iam_role.codebuild_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetAccelerateConfiguration",
+          "s3:PutAccelerateConfiguration"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
