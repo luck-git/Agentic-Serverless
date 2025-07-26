@@ -142,6 +142,22 @@ resource "aws_iam_role_policy" "codebuild_terraform_policy" {
           "s3:GetBucketLogging",
           "s3:PutBucketLogging",
           "s3:GetBucketLocation",
+          "s3:GetBucketCors",
+          "s3:PutBucketCors",
+          "s3:DeleteBucketCors",
+          "s3:GetBucketWebsite",
+          "s3:PutBucketWebsite",
+          "s3:DeleteBucketWebsite",
+          "s3:GetBucketNotification",
+          "s3:PutBucketNotification",
+          "s3:GetBucketRequestPayment",
+          "s3:PutBucketRequestPayment",
+          "s3:GetLifecycleConfiguration",
+          "s3:PutLifecycleConfiguration",
+          "s3:DeleteLifecycleConfiguration",
+          "s3:GetReplicationConfiguration",
+          "s3:PutReplicationConfiguration",
+          "s3:DeleteReplicationConfiguration",
           
           # SNS permissions
           "sns:CreateTopic",
@@ -267,3 +283,45 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
 }
 
 # REMOVED the duplicate codebuild_policy that had S3 references
+
+# Additional policy for CodeBuild to access the minimal artifacts bucket
+resource "aws_iam_role_policy" "codebuild_minimal_s3_policy" {
+  name = "${var.project_name}-${var.environment}-codebuild-minimal-s3-policy"
+  role = aws_iam_role.codebuild_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetBucketAcl",
+          "s3:GetBucketCors",
+          "s3:GetBucketLocation",
+          "s3:GetBucketLogging",
+          "s3:GetBucketNotification",
+          "s3:GetBucketPolicy",
+          "s3:GetBucketRequestPayment",
+          "s3:GetBucketTagging",
+          "s3:GetBucketVersioning",
+          "s3:GetBucketWebsite",
+          "s3:GetEncryptionConfiguration",
+          "s3:GetLifecycleConfiguration",
+          "s3:GetReplicationConfiguration",
+          "s3:ListBucket"
+        ]
+        Resource = aws_s3_bucket.minimal_artifacts.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ]
+        Resource = "${aws_s3_bucket.minimal_artifacts.arn}/*"
+      }
+    ]
+  })
+}
