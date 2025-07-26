@@ -18,12 +18,12 @@ output "codebuild_project_arn" {
   value       = aws_codebuild_project.terraform_build.arn
 }
 
-output "artifacts_bucket_name" {
-  description = "Name of the S3 artifacts bucket"
-  value       = aws_s3_bucket.codepipeline_artifacts.bucket
-}
+#output "artifacts_bucket_name" {
+#  description = "Name of the S3 artifacts bucket"
+#  value       = aws_s3_bucket.codepipeline_artifacts.bucket
+#}
 
-output "artifacts_bucket_arn" {
-  description = "ARN of the S3 artifacts bucket"
-  value       = aws_s3_bucket.codepipeline_artifacts.arn
-}
+#output "artifacts_bucket_arn" {
+ # description = "ARN of the S3 artifacts bucket"
+ # value       = aws_s3_bucket.codepipeline_artifacts.arn
+#}

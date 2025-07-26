@@ -1,40 +1,3 @@
-# S3 Bucket for CodePipeline Artifacts
-resource "aws_s3_bucket" "codepipeline_artifacts" {
-  bucket = "${var.project_name}-${var.environment}-pipeline-artifacts-${random_string.bucket_suffix.result}"
-}
-
-resource "random_string" "bucket_suffix" {
-  length  = 8
-  special = false
-  upper   = false
-}
-
-resource "aws_s3_bucket_versioning" "codepipeline_bucket_versioning" {
-  bucket = aws_s3_bucket.codepipeline_artifacts.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "codepipeline_bucket_encryption" {
-  bucket = aws_s3_bucket.codepipeline_artifacts.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
-
-resource "aws_s3_bucket_public_access_block" "codepipeline_bucket_pab" {
-  bucket = aws_s3_bucket.codepipeline_artifacts.id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
 # CodeBuild Project
 resource "aws_codebuild_project" "terraform_build" {
   name          = "${var.project_name}-${var.environment}-terraform-build"
@@ -92,13 +55,14 @@ resource "aws_codebuild_project" "terraform_build" {
   tags = var.tags
 }
 
-# CodePipeline
+# CodePipeline with minimal artifact store
 resource "aws_codepipeline" "terraform_pipeline" {
   name     = "${var.project_name}-${var.environment}-terraform-pipeline"
   role_arn = aws_iam_role.codepipeline_role.arn
 
+  # Required minimal artifact store
   artifact_store {
-    location = aws_s3_bucket.codepipeline_artifacts.bucket
+    location = aws_s3_bucket.minimal_artifacts.bucket
     type     = "S3"
   }
 
@@ -123,48 +87,18 @@ resource "aws_codepipeline" "terraform_pipeline" {
   }
 
   stage {
-    name = "Plan"
+    name = "Build"
 
     action {
-      name             = "TerraformPlan"
-      category         = "Build"
-      owner            = "AWS"
-      provider         = "CodeBuild"
-      input_artifacts  = ["source_output"]
-      output_artifacts = ["plan_output"]
-      version          = "1"
-
-      configuration = {
-        ProjectName = aws_codebuild_project.terraform_build.name
-        EnvironmentVariables = jsonencode([
-          {
-            name  = "TF_COMMAND"
-            value = "plan"
-          }
-        ])
-      }
-    }
-  }
-
-  stage {
-    name = "Deploy"
-
-    action {
-      name            = "TerraformApply"
+      name            = "TerraformBuild"
       category        = "Build"
       owner           = "AWS"
       provider        = "CodeBuild"
-      input_artifacts = ["source_output"]
       version         = "1"
+      input_artifacts = ["source_output"]
 
       configuration = {
         ProjectName = aws_codebuild_project.terraform_build.name
-        EnvironmentVariables = jsonencode([
-          {
-            name  = "TF_COMMAND"
-            value = "apply"
-          }
-        ])
       }
     }
   }

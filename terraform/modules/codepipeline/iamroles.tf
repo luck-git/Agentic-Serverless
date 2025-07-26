@@ -20,7 +20,7 @@ resource "aws_iam_role" "codebuild_role" {
   })
 }
 
-# CodeBuild IAM Policy - Basic Permissions
+# CodeBuild IAM Policy - Basic Permissions (REMOVED S3 REFERENCES)
 resource "aws_iam_role_policy" "codebuild_basic_policy" {
   name = "${var.project_name}-${var.environment}-codebuild-basic-policy"
   role = aws_iam_role.codebuild_role.id
@@ -36,42 +36,8 @@ resource "aws_iam_role_policy" "codebuild_basic_policy" {
           "logs:PutLogEvents"
         ]
         Resource = "arn:aws:logs:*:*:*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:GetObjectVersion",
-          "s3:PutObject",
-          "s3:GetBucketPolicy",
-          "s3:PutBucketPolicy",
-          "s3:DeleteBucketPolicy",
-          "s3:GetBucketVersioning",
-          "s3:PutBucketVersioning",
-          "s3:GetBucketEncryption",
-          "s3:PutBucketEncryption",
-          "s3:GetBucketPublicAccessBlock",
-          "s3:PutBucketPublicAccessBlock",
-          "s3:GetBucketTagging",
-          "s3:PutBucketTagging",
-          "s3:GetBucketLogging",
-          "s3:PutBucketLogging"
-        ]
-        Resource = [
-          "${aws_s3_bucket.codepipeline_artifacts.arn}/*",
-          aws_s3_bucket.codepipeline_artifacts.arn
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:ListBucket",
-          "s3:CreateBucket",
-          "s3:DeleteBucket",
-          "s3:GetBucketLocation"
-        ]
-        Resource = aws_s3_bucket.codepipeline_artifacts.arn
       }
+      # REMOVED THE ENTIRE S3 BLOCK THAT REFERENCED codepipeline_artifacts
     ]
   })
 }
@@ -127,7 +93,7 @@ resource "aws_iam_role_policy" "codebuild_terraform_policy" {
           "cloudwatch:*",
           "logs:*",
           
-          # CodeBuild permissions - THIS WAS MISSING
+          # CodeBuild permissions
           "codebuild:BatchGetProjects",
           "codebuild:CreateProject",
           "codebuild:UpdateProject",
@@ -136,7 +102,7 @@ resource "aws_iam_role_policy" "codebuild_terraform_policy" {
           "codebuild:StartBuild",
           "codebuild:BatchGetBuilds",
           
-          # CodePipeline permissions - THESE WERE MISSING
+          # CodePipeline permissions
           "codepipeline:CreatePipeline",
           "codepipeline:UpdatePipeline",
           "codepipeline:DeletePipeline",
@@ -165,6 +131,17 @@ resource "aws_iam_role_policy" "codebuild_terraform_policy" {
           "s3:DeleteBucketPolicy",
           "s3:GetBucketVersioning",
           "s3:PutBucketVersioning",
+          "s3:GetBucketAcl",
+          "s3:PutBucketAcl",
+          "s3:GetBucketEncryption",
+          "s3:PutBucketEncryption",
+          "s3:GetBucketPublicAccessBlock",
+          "s3:PutBucketPublicAccessBlock",
+          "s3:GetBucketTagging",
+          "s3:PutBucketTagging",
+          "s3:GetBucketLogging",
+          "s3:PutBucketLogging",
+          "s3:GetBucketLocation",
           
           # SNS permissions
           "sns:CreateTopic",
@@ -194,7 +171,7 @@ resource "aws_iam_role_policy" "codebuild_terraform_policy" {
   })
 }
 
-# CodeBuild SSM Access Policy - FIXED THE PARAMETER NAMES
+# CodeBuild SSM Access Policy
 resource "aws_iam_role_policy" "codebuild_ssm_access" {
   name = "${var.project_name}-${var.environment}-codebuild-ssm-access"
   role = aws_iam_role.codebuild_role.id
@@ -242,7 +219,18 @@ resource "aws_iam_role" "codepipeline_role" {
   })
 }
 
-# CodePipeline IAM Policy
+# Create minimal S3 bucket for CodePipeline artifact store (required)
+resource "aws_s3_bucket" "minimal_artifacts" {
+  bucket = "${var.project_name}-${var.environment}-minimal-artifacts-${random_string.bucket_suffix.result}"
+}
+
+resource "random_string" "bucket_suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+# CodePipeline IAM Policy (UPDATED TO USE MINIMAL BUCKET)
 resource "aws_iam_role_policy" "codepipeline_policy" {
   name = "${var.project_name}-${var.environment}-codepipeline-policy"
   role = aws_iam_role.codepipeline_role.id
@@ -262,8 +250,8 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
           "s3:PutObjectAcl"
         ]
         Resource = [
-          aws_s3_bucket.codepipeline_artifacts.arn,
-          "${aws_s3_bucket.codepipeline_artifacts.arn}/*"
+          aws_s3_bucket.minimal_artifacts.arn,
+          "${aws_s3_bucket.minimal_artifacts.arn}/*"
         ]
       },
       {
@@ -277,27 +265,5 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
     ]
   })
 }
-resource "aws_iam_role_policy" "codebuild_policy" {
-  name = "codebuild-policy"
-  role = aws_iam_role.codebuild_role.id
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetBucketAcl",
-          "s3:GetBucketLocation",
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject"
-        ]
-        Resource = [
-          aws_s3_bucket.codepipeline_artifacts.arn,
-          "${aws_s3_bucket.codepipeline_artifacts.arn}/*"
-        ]
-      }
-    ]
-  })
-}
+# REMOVED the duplicate codebuild_policy that had S3 references
