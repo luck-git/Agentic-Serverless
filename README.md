@@ -174,5 +174,5 @@ curl -X POST https://lt2bq3ch28.execute-api.ap-southeast-2.amazonaws.com/prod/or
 ## Resources
 
 - **GitHub Repository**: [https://github.com/luck-git/Agentic-Serverless](https://github.com/luck-git/Agentic-Serverless)
-- **Demo Video**: [https://www.loom.com/share/a738f0f0738944849bbff55c4b213817?sid=93b82698-81c3-48dd-90ec-ce8dff8f3fc9)
+- **Demo Video**: https://www.loom.com/share/a738f0f0738944849bbff55c4b213817?sid=22a8091f-c1c4-4143-b467-28a589e47f84
 
