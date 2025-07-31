@@ -62,7 +62,7 @@ phases:
       - echo "Running terraform destroy"
       #- terraform plan -input=false -var-file=../terraform.tfvars -out=tfplan
       #- terraform apply -input=false -auto-approve tfplan
-      -  terraform destroy
+      -  terraform destroy -input=false -var-file=../terraform.tfvars
 
 artifacts:
   files:
